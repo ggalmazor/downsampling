@@ -1,3 +1,13 @@
+import org.commonmark.parser.Parser
+import org.commonmark.renderer.html.HtmlRenderer
+
+buildscript {
+  repositories { mavenCentral() }
+  dependencies {
+    classpath("org.commonmark:commonmark:0.24.0")
+  }
+}
+
 plugins {
   `java-library`
   checkstyle
@@ -28,8 +38,40 @@ tasks.named<Test>("test") {
   useJUnitPlatform()
 }
 
+val generateJavadocOverview by tasks.registering {
+  val readmeFile = rootProject.file("README.md")
+  val overviewFile = layout.buildDirectory.file("javadoc-overview/overview.html")
+  inputs.file(readmeFile)
+  outputs.file(overviewFile)
+
+  doLast {
+    val markdown = readmeFile.readText()
+    val parser = Parser.builder().build()
+    val renderer = HtmlRenderer.builder().build()
+    val html = renderer.render(parser.parse(markdown))
+    val output = overviewFile.get().asFile
+    output.parentFile.mkdirs()
+    // Escape @ inside <pre> blocks so Javadoc doesn't mistake them for tag starts.
+    val escaped = html.replace(Regex("(?s)(<pre[^>]*>)(.*?)(</pre>)")) { m ->
+      m.groupValues[1] + m.groupValues[2].replace("@", "&#64;") + m.groupValues[3]
+    }
+    output.writeText("""
+      <!DOCTYPE html>
+      <html lang="en">
+      <head><meta charset="UTF-8"><title>downsampling</title></head>
+      <body>$escaped</body>
+      </html>
+    """.trimIndent())
+  }
+}
+
 tasks.javadoc {
+  dependsOn(generateJavadocOverview)
   source = sourceSets.main.get().allJava
+  (options as StandardJavadocDocletOptions).apply {
+    overview = generateJavadocOverview.get().outputs.files.singleFile.absolutePath
+    addStringOption("Xdoclint:none", "-quiet")
+  }
 }
 
 mavenPublishing {
