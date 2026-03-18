@@ -111,22 +111,12 @@ List<MyPoint> result = Downsampling.pip(series, 20);
 
 ### Custom point types
 
-Implement `Point` to use your own data type:
+Implement `Point` to use your own data type. Records are the natural fit:
 
 ```java
-public class Reading implements Point {
-    private final Instant timestamp;
-    private final double value;
-
-    public Reading(Instant timestamp, double value) {
-        this.timestamp = timestamp;
-        this.value = value;
-    }
-
+public record Reading(Instant timestamp, double value) implements Point {
     @Override public double getX() { return timestamp.toEpochMilli(); }
     @Override public double getY() { return value; }
-
-    public Instant getTimestamp() { return timestamp; }
 }
 
 // The output list is List<Reading> — the concrete type is preserved
