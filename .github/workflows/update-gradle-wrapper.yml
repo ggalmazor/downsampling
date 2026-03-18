@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         java-version:
-          - '25'
+          - '21'
     steps:
       - uses: actions/checkout@v6
       - name: Update Gradle Wrapper
