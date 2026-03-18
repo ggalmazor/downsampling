@@ -16,7 +16,7 @@ import java.util.stream.IntStream;
  * input, the point that forms the largest triangle area with the previously selected point and
  * the centroid of the next bucket.
  *
- * <p>The input list must be sorted by {@link Point#getX()} in monotonically non-decreasing
+ * <p>The input list must be sorted by {@link Point#x()} in monotonically non-decreasing
  * order. None of the methods in this class mutate the input list or its elements.
  *
  * <p>When the input contains {@link DoublePoint} instances, a struct-of-arrays fast path is
