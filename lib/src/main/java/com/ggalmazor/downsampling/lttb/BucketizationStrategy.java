@@ -32,7 +32,7 @@ public enum BucketizationStrategy {
    * Fixed bucket size: each bucket covers an equal x-axis span.
    *
    * <p>The total x range {@code [x_first, x_last]} is divided into equal-width intervals.
-   * Empty intervals are silently skipped. {@link Point#x()} must be monotonically
+   * Empty intervals are silently skipped. {@link Point#getX()} must be monotonically
    * non-decreasing across the input list.
    */
   FIXED

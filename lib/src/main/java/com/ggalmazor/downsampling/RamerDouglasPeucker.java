@@ -17,7 +17,7 @@ import java.util.List;
  * shape and the chosen {@code epsilon} — not specified directly. A larger {@code epsilon}
  * produces fewer output points; a smaller one retains more detail.
  *
- * <p>The input list must be sorted by {@link Point#x()} in monotonically non-decreasing
+ * <p>The input list must be sorted by {@link Point#getX()} in monotonically non-decreasing
  * order. This class does not mutate the input list or its elements.
  */
 public final class RamerDouglasPeucker {
