@@ -62,11 +62,36 @@ behavioural interface — each algorithm exposes different parameters that refle
 controls.</p>
 <p>Javadoc at <a href="https://ggalmazor.com/downsampling">ggalmazor.com/downsampling</a></p>
 <h2>Java version support</h2>
-<p>| Version | Java baseline | Branch | Status |
-|---------|---------------|--------|--------|
-| 17.x.x | Java 17 | <code>v17</code> | Active (bug fixes only) |
-| 21.x.x | Java 21 | <code>v21</code> | Active |
-| 25.x.x | Java 25 | <code>main</code> | Active (cutting edge) |</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Java baseline</th>
+<th>Branch</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>17.x.x</td>
+<td>Java 17</td>
+<td><code>v17</code></td>
+<td>Active (bug fixes only)</td>
+</tr>
+<tr>
+<td>21.x.x</td>
+<td>Java 21</td>
+<td><code>v21</code></td>
+<td>Active</td>
+</tr>
+<tr>
+<td>25.x.x</td>
+<td>Java 25</td>
+<td><code>main</code></td>
+<td>Active (cutting edge)</td>
+</tr>
+</tbody>
+</table>
 <p>The library version number reflects the minimum Java version required to use it. The JDK version
 is managed by <a href="https://mise.jdx.dev/">mise</a>. Run <code>mise install</code> to get the correct JDK for the
 branch you are on.</p>
@@ -177,48 +202,183 @@ with epsilon.</p>
 <pre><code class="language-bash">mise exec -- ./gradlew jmh
 </code></pre>
 <h3>LTTB</h3>
-<p>| dataSize | targetPoints | ms/op |
-|:---:|:---:|---:|
-| 10k | 100 | 0.023 |
-| 10k | 1 000 | 0.060 |
-| 10k | 5 000 | 0.136 |
-| 100k | 100 | 0.226 |
-| 100k | 1 000 | 0.249 |
-| 100k | 5 000 | 0.321 |
-| 500k | 100 | 1.574 |
-| 500k | 1 000 | 1.359 |
-| 500k | 5 000 | 1.549 |</p>
+<table>
+<thead>
+<tr>
+<th align="center">dataSize</th>
+<th align="center">targetPoints</th>
+<th align="right">ms/op</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">10k</td>
+<td align="center">100</td>
+<td align="right">0.023</td>
+</tr>
+<tr>
+<td align="center">10k</td>
+<td align="center">1 000</td>
+<td align="right">0.060</td>
+</tr>
+<tr>
+<td align="center">10k</td>
+<td align="center">5 000</td>
+<td align="right">0.136</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">100</td>
+<td align="right">0.226</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">1 000</td>
+<td align="right">0.249</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">5 000</td>
+<td align="right">0.321</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">100</td>
+<td align="right">1.574</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">1 000</td>
+<td align="right">1.359</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">5 000</td>
+<td align="right">1.549</td>
+</tr>
+</tbody>
+</table>
 <p>Linear scaling confirmed: 10× data → ~10× time. <code>targetPoints</code> has a modest secondary effect
 within a data-size tier (more buckets = more array extraction overhead) but it disappears at
 500k, where the O(n) coordinate-extraction pass dominates. <strong>500k points in ~1.5 ms.</strong></p>
 <h3>RDP</h3>
-<p>| dataSize | epsilon | ms/op |
-|:---:|:---:|---:|
-| 10k | 0.5 | 0.734 |
-| 10k | 2.0 | 0.573 |
-| 10k | 5.0 | 0.210 |
-| 100k | 0.5 | 16.778 |
-| 100k | 2.0 | 15.162 |
-| 100k | 5.0 | 11.561 |
-| 500k | 0.5 | 145.516 |
-| 500k | 2.0 | 133.401 |
-| 500k | 5.0 | 118.610 |</p>
+<table>
+<thead>
+<tr>
+<th align="center">dataSize</th>
+<th align="center">epsilon</th>
+<th align="right">ms/op</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">10k</td>
+<td align="center">0.5</td>
+<td align="right">0.734</td>
+</tr>
+<tr>
+<td align="center">10k</td>
+<td align="center">2.0</td>
+<td align="right">0.573</td>
+</tr>
+<tr>
+<td align="center">10k</td>
+<td align="center">5.0</td>
+<td align="right">0.210</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">0.5</td>
+<td align="right">16.778</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">2.0</td>
+<td align="right">15.162</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">5.0</td>
+<td align="right">11.561</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">0.5</td>
+<td align="right">145.516</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">2.0</td>
+<td align="right">133.401</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">5.0</td>
+<td align="right">118.610</td>
+</tr>
+</tbody>
+</table>
 <p>10k → 100k: ~22× slower. 100k → 500k: ~9× slower — consistent with O(n log n). The epsilon
 effect is visible: smaller epsilon → more retained points → deeper recursion trees → more work.
 At 500k the spread is 145 ms (epsilon=0.5) vs 119 ms (epsilon=5.0), a 22% difference from tree
 shape alone. <strong>500k points in 120–146 ms.</strong></p>
 <h3>PIP</h3>
-<p>| dataSize | targetSize | ms/op |
-|:---:|:---:|---:|
-| 10k | 100 | 13.3 |
-| 10k | 1 000 | 19.0 |
-| 10k | 5 000 | 21.7 |
-| 100k | 100 | 631 |
-| 100k | 1 000 | 959 |
-| 100k | 5 000 | 1 010 |
-| 500k | 100 | 4 098 |
-| 500k | 1 000 | 10 876 |
-| 500k | 5 000 | 11 005 |</p>
+<table>
+<thead>
+<tr>
+<th align="center">dataSize</th>
+<th align="center">targetSize</th>
+<th align="right">ms/op</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">10k</td>
+<td align="center">100</td>
+<td align="right">13.3</td>
+</tr>
+<tr>
+<td align="center">10k</td>
+<td align="center">1 000</td>
+<td align="right">19.0</td>
+</tr>
+<tr>
+<td align="center">10k</td>
+<td align="center">5 000</td>
+<td align="right">21.7</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">100</td>
+<td align="right">631</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">1 000</td>
+<td align="right">959</td>
+</tr>
+<tr>
+<td align="center">100k</td>
+<td align="center">5 000</td>
+<td align="right">1 010</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">100</td>
+<td align="right">4 098</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">1 000</td>
+<td align="right">10 876</td>
+</tr>
+<tr>
+<td align="center">500k</td>
+<td align="center">5 000</td>
+<td align="right">11 005</td>
+</tr>
+</tbody>
+</table>
 <p>The previous heap-based implementation had a 25× blowup when going from targetSize=100 to
 targetSize=1 000 at 100k points (304 ms → 7.75 s), caused by O(n·k) stale entry accumulation
 in the lazy-deletion priority queue. The segment tree implementation resolves this: the same
@@ -237,15 +397,60 @@ was sufficient. At k=1 000 and above the segment tree wins decisively.</p>
 10.9 s — a 2.7× increase for a 10× increase in k, confirming the improved complexity.
 <strong>500k points in 4–11 s</strong> depending on targetSize.</p>
 <h2>Algorithm comparison</h2>
-<p>| | LTTB | RDP | PIP |
-|---|:---:|:---:|:---:|
-| Output size | exact (<code>buckets + 2</code>) | data-driven | exact (<code>targetSize</code>) |
-| Control parameter | bucket count | epsilon (distance) | target point count |
-| Time complexity | O(n) | O(n log n) avg / O(n²) worst | O(n + k log n)¹ |
-| Stack depth | O(1) | O(1) — iterative, no <code>StackOverflowError</code> risk | O(1) |
-| Visual fidelity | high — optimised for charts | geometric — no point with dist &gt; ε discarded | high — most prominent features first |
-| Unevenly-spaced data | FIXED strategy | natural | natural |
-| Practical limit | 500k+ points, &lt;2 ms | 500k in 120–146 ms | 500k in 4–11 s |</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th align="center">LTTB</th>
+<th align="center">RDP</th>
+<th align="center">PIP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Output size</td>
+<td align="center">exact (<code>buckets + 2</code>)</td>
+<td align="center">data-driven</td>
+<td align="center">exact (<code>targetSize</code>)</td>
+</tr>
+<tr>
+<td>Control parameter</td>
+<td align="center">bucket count</td>
+<td align="center">epsilon (distance)</td>
+<td align="center">target point count</td>
+</tr>
+<tr>
+<td>Time complexity</td>
+<td align="center">O(n)</td>
+<td align="center">O(n log n) avg / O(n²) worst</td>
+<td align="center">O(n + k log n)¹</td>
+</tr>
+<tr>
+<td>Stack depth</td>
+<td align="center">O(1)</td>
+<td align="center">O(1) — iterative, no <code>StackOverflowError</code> risk</td>
+<td align="center">O(1)</td>
+</tr>
+<tr>
+<td>Visual fidelity</td>
+<td align="center">high — optimised for charts</td>
+<td align="center">geometric — no point with dist &gt; ε discarded</td>
+<td align="center">high — most prominent features first</td>
+</tr>
+<tr>
+<td>Unevenly-spaced data</td>
+<td align="center">FIXED strategy</td>
+<td align="center">natural</td>
+<td align="center">natural</td>
+</tr>
+<tr>
+<td>Practical limit</td>
+<td align="center">500k+ points, &lt;2 ms</td>
+<td align="center">500k in 120–146 ms</td>
+<td align="center">500k in 4–11 s</td>
+</tr>
+</tbody>
+</table>
 <p>¹ O(n) to build the segment tree + O(k log n) for k selections, each updating O(segment length)
 neighbours at O(log n) per update. The O(n) build is eager and unavoidable regardless of k; the
 previous lazy-deletion heap avoided this cost when k ≪ n by only ever touching O(k) entries. The
