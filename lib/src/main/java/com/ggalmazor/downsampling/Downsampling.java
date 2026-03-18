@@ -8,7 +8,7 @@ import java.util.List;
  *
  * <p>All methods accept a sorted {@code List<T extends Point>} and return a {@code List<T>},
  * preserving the concrete point type throughout. The input list must be sorted by
- * {@link Point#getX()} in monotonically non-decreasing order. No method mutates the input
+ * {@link Point#x()} in monotonically non-decreasing order. No method mutates the input
  * list or its elements.
  *
  * <p>Algorithms:
