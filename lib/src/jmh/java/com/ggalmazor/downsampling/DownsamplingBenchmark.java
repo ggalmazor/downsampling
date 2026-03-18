@@ -86,12 +86,13 @@ public class DownsamplingBenchmark {
   // ---- PIP state --------------------------------------------------------
 
   /**
-   * PIP is O((n + k) log n) — capped at 100k due to heap pressure at large k.
+   * PIP is O(n + k log n) — segment tree eliminates the stale-entry accumulation that
+   * previously capped practical use at 100k.
    */
   @State(Scope.Benchmark)
   public static class PipState {
 
-    @Param({"10000", "100000"})
+    @Param({"10000", "100000", "500000"})
     public int dataSize;
 
     @Param({"100", "1000", "5000"})
