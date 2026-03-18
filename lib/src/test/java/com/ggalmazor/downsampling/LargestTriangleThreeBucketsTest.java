@@ -141,7 +141,7 @@ public class LargestTriangleThreeBucketsTest {
   // ---- via Downsampling facade ----
 
   @Test
-  public void facade_lttb_delegates_to_sorted() {
+  public void facade_lttb_produces_expected_output() {
     List<DoublePoint> input = asList(
         DoublePoint.of(0, 0),
         DoublePoint.of(1, 1),
@@ -162,10 +162,8 @@ public class LargestTriangleThreeBucketsTest {
     ));
   }
 
-  // ---- FIXED bucketization ----
-
   @Test
-  public void fixed_evenly_spaced_matches_dynamic() {
+  public void facade_lttb_fixed_evenly_spaced_matches_dynamic() {
     List<DoublePoint> input = asList(
         DoublePoint.of(0, 0),
         DoublePoint.of(1, 1),
@@ -176,14 +174,14 @@ public class LargestTriangleThreeBucketsTest {
         DoublePoint.of(6, 0)
     );
 
-    List<DoublePoint> dynamic = LargestTriangleThreeBuckets.sorted(input, input.size(), 2);
-    List<DoublePoint> fixed = LargestTriangleThreeBuckets.sorted(input, 2, BucketizationStrategy.FIXED);
+    List<DoublePoint> dynamic = Downsampling.lttb(input, 2);
+    List<DoublePoint> fixed = Downsampling.lttb(input, 2, BucketizationStrategy.FIXED);
 
     assertThat(fixed, equalTo(dynamic));
   }
 
   @Test
-  public void fixed_skips_empty_buckets_in_gappy_series() {
+  public void facade_lttb_fixed_skips_empty_buckets_in_gappy_series() {
     List<DoublePoint> input = asList(
         DoublePoint.of(0, 0),
         DoublePoint.of(1, 5),
@@ -193,7 +191,7 @@ public class LargestTriangleThreeBucketsTest {
         DoublePoint.of(10, 0)
     );
 
-    List<DoublePoint> output = LargestTriangleThreeBuckets.sorted(input, 4, BucketizationStrategy.FIXED);
+    List<DoublePoint> output = Downsampling.lttb(input, 4, BucketizationStrategy.FIXED);
 
     assertThat(output.size(), equalTo(5));
     assertThat(output.get(0), pointAt(0, 0));
@@ -201,7 +199,7 @@ public class LargestTriangleThreeBucketsTest {
   }
 
   @Test
-  public void fixed_throws_when_all_x_values_are_equal() {
+  public void facade_lttb_fixed_throws_when_all_x_values_are_equal() {
     List<DoublePoint> input = asList(
         DoublePoint.of(1, 0),
         DoublePoint.of(1, 1),
@@ -209,14 +207,14 @@ public class LargestTriangleThreeBucketsTest {
     );
 
     assertThrows(IllegalArgumentException.class, () ->
-        LargestTriangleThreeBuckets.sorted(input, 2, BucketizationStrategy.FIXED)
+        Downsampling.lttb(input, 2, BucketizationStrategy.FIXED)
     );
   }
 
   @SuppressWarnings({"DataFlowIssue", "resource"})
   @Test
   public void complex_downsampling_scenario() throws URISyntaxException, IOException {
-    URI uri = LargestTriangleThreeBuckets.class
+    URI uri = Downsampling.class
         .getResource("/daily-foreign-exchange-rates-31-.csv").toURI();
     List<DateSeriesPoint> series = Files.lines(Paths.get(uri))
         .map(line -> line.split(";"))
@@ -228,7 +226,7 @@ public class LargestTriangleThreeBucketsTest {
         .sorted(comparing(Point::x))
         .collect(toList());
 
-    List<DateSeriesPoint> output = LargestTriangleThreeBuckets.sorted(series, 10);
+    List<DateSeriesPoint> output = Downsampling.lttb(series, 10);
     List<LocalDate> selectedDates = output.stream()
         .map(DateSeriesPoint::date)
         .collect(toList());
