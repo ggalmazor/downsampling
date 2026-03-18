@@ -1,5 +1,6 @@
 # downsampling
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.ggalmazor/downsampling.svg)](https://central.sonatype.com/artifact/com.ggalmazor/downsampling)
 [![CI](https://github.com/ggalmazor/downsampling/actions/workflows/ci.yml/badge.svg)](https://github.com/ggalmazor/downsampling/actions/workflows/ci.yml)
 
 A Java library providing three time-series downsampling algorithms under a shared data contract:
