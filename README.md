@@ -235,9 +235,16 @@ targetSize=1 000 at 100k points (304 ms → 7.75 s), caused by O(n·k) stale ent
 in the lazy-deletion priority queue. The segment tree implementation resolves this: the same
 step is now 631 ms → 959 ms, a 1.5× increase for a 10× increase in k.
 
-At 100k, targetSize=100 regressed from 304 ms to 631 ms. This is a deliberate trade-off: the
-segment tree costs O(n) to build regardless of k, which dominates at very small k where the old
-heap's smaller initial size was faster. At k=1 000 and above the segment tree wins decisively.
+At 100k, targetSize=100 regressed from 304 ms to 631 ms. This is a deliberate trade-off worth
+understanding: the segment tree always costs O(n) to build, touching every leaf once regardless
+of k. The old lazy-deletion heap avoided this — it started with all n entries in the heap but
+only ever polled and re-inserted entries reachable from the O(k) segments it actually visited.
+When k ≪ n the heap never paid the O(n) overhead; the segment tree cannot avoid it. The
+crossover is around k/n ≈ 0.005–0.01 on this hardware: below that the heap was cheaper; above
+it the heap's O(n·k) stale-entry accumulation made it catastrophically slower. If your workload
+is consistently small k relative to n (e.g. selecting 50–100 points from a 100k+ series), this
+regression is real — it is a known trade-off of using an eager data structure where a lazy one
+was sufficient. At k=1 000 and above the segment tree wins decisively.
 
 At 500k, all combinations now complete in finite time. The k=100 → k=1 000 jump is 4.1 s →
 10.9 s — a 2.7× increase for a 10× increase in k, confirming the improved complexity.
@@ -255,9 +262,10 @@ At 500k, all combinations now complete in finite time. The k=100 → k=1 000 jum
 | Unevenly-spaced data | FIXED strategy | natural | natural |
 | Practical limit | 500k+ points, <2 ms | 500k in 120–146 ms | 500k in 4–11 s |
 
-¹ O(n) to build the segment tree + O(k log n) to select k points, each requiring O(segment)
-distance updates each costing O(log n). Small targetSize at large n carries O(n) segment tree
-build overhead; the segment tree wins decisively over the heap for targetSize ≳ 500.
+¹ O(n) to build the segment tree + O(k log n) for k selections, each updating O(segment length)
+neighbours at O(log n) per update. The O(n) build is eager and unavoidable regardless of k; the
+previous lazy-deletion heap avoided this cost when k ≪ n by only ever touching O(k) entries. The
+segment tree wins when k/n ≳ 0.01; the heap was faster when k/n ≲ 0.001.
 
 ### When to choose each algorithm
 

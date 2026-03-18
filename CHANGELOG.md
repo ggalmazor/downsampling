@@ -10,8 +10,11 @@
   update; the heap's lack of `decreaseKey` is no longer a bottleneck
 - PIP 100k/k=1000: 7.75 s → 959 ms (8× faster); 100k/k=5000: 8.15 s → 1.01 s (8× faster)
 - PIP 500k now completes in 4–11 s (previously hung indefinitely)
-- PIP 100k/k=100 regressed slightly (304 ms → 631 ms): O(n) tree build dominates at small k;
-  the segment tree wins decisively for targetSize ≳ 500
+- PIP 100k/k=100 regressed from 304 ms to 631 ms — a known trade-off: the segment tree builds
+  eagerly in O(n) regardless of k; the old heap built lazily and only ever touched O(k) entries
+  when k ≪ n, so it was cheaper in that regime. The crossover is k/n ≈ 0.005–0.01: below that
+  the heap was faster; above it the heap's stale-entry accumulation dominates. The segment tree
+  wins decisively for k/n ≳ 0.01 (targetSize ≳ n/100)
 
 ## Release 17.0.0
 
