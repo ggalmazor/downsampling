@@ -1,0 +1,11 @@
+.idea
+.gradle
+build
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# mise
+lib/bin/
