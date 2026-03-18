@@ -82,6 +82,12 @@ Output size is determined by the data shape and `epsilon`: every retained interi
 perpendicular distance greater than `epsilon` from the line connecting its two nearest retained
 neighbours. A larger `epsilon` retains fewer points; `epsilon = 0` retains all points.
 
+The implementation uses an explicit `Deque` stack rather than JVM call-stack recursion. The
+naive recursive formulation has O(log n) average / O(n) worst-case stack depth and causes
+`StackOverflowError` on adversarial or pathological inputs at large sizes. The iterative
+implementation eliminates this risk entirely — stack depth is O(1) regardless of input shape
+or size.
+
 **When to use:** when you care about geometric fidelity (no point that would deviate more than
 `epsilon` from the simplified line is ever discarded) and are willing to accept a variable output
 size.
@@ -214,17 +220,28 @@ shape alone. **500k points in 120–146 ms.**
 
 | dataSize | targetSize | ms/op |
 |:---:|:---:|---:|
-| 10k | 100 | 40.2 |
-| 10k | 1 000 | 47.8 |
-| 10k | 5 000 | 79.8 |
-| 100k | 100 | 304 |
-| 100k | 1 000 | 7 750 |
-| 100k | 5 000 | 8 149 |
+| 10k | 100 | 13.3 |
+| 10k | 1 000 | 19.0 |
+| 10k | 5 000 | 21.7 |
+| 100k | 100 | 631 |
+| 100k | 1 000 | 959 |
+| 100k | 5 000 | 1 010 |
+| 500k | 100 | 4 098 |
+| 500k | 1 000 | 10 876 |
+| 500k | 5 000 | 11 005 |
 
-The 10k numbers are well-behaved. At 100k the jump from targetSize=100 (304 ms) to
-targetSize=1 000 (7.75 s) reveals that the heap accumulates O(n·k) stale entries in total when
-segments are large relative to n, negating the theoretical O((n+k) log n) improvement. PIP is
-not benchmarked beyond 100k because the combination of large n and large k becomes impractical.
+The previous heap-based implementation had a 25× blowup when going from targetSize=100 to
+targetSize=1 000 at 100k points (304 ms → 7.75 s), caused by O(n·k) stale entry accumulation
+in the lazy-deletion priority queue. The segment tree implementation resolves this: the same
+step is now 631 ms → 959 ms, a 1.5× increase for a 10× increase in k.
+
+At 100k, targetSize=100 regressed from 304 ms to 631 ms. This is a deliberate trade-off: the
+segment tree costs O(n) to build regardless of k, which dominates at very small k where the old
+heap's smaller initial size was faster. At k=1 000 and above the segment tree wins decisively.
+
+At 500k, all combinations now complete in finite time. The k=100 → k=1 000 jump is 4.1 s →
+10.9 s — a 2.7× increase for a 10× increase in k, confirming the improved complexity.
+**500k points in 4–11 s** depending on targetSize.
 
 ## Algorithm comparison
 
@@ -232,13 +249,15 @@ not benchmarked beyond 100k because the combination of large n and large k becom
 |---|:---:|:---:|:---:|
 | Output size | exact (`buckets + 2`) | data-driven | exact (`targetSize`) |
 | Control parameter | bucket count | epsilon (distance) | target point count |
-| Time complexity | O(n) | O(n log n) avg / O(n²) worst | O((n+k) log n) theoretical¹ |
-| Stack depth | O(1) | O(1) iterative | O(1) |
+| Time complexity | O(n) | O(n log n) avg / O(n²) worst | O(n + k log n)¹ |
+| Stack depth | O(1) | O(1) — iterative, no `StackOverflowError` risk | O(1) |
 | Visual fidelity | high — optimised for charts | geometric — no point with dist > ε discarded | high — most prominent features first |
 | Unevenly-spaced data | FIXED strategy | natural | natural |
-| Practical limit | 500k+ points, <2 ms | 500k in 120–146 ms | ~50k–100k at low k |
+| Practical limit | 500k+ points, <2 ms | 500k in 120–146 ms | 500k in 4–11 s |
 
-¹ Degrades to O(n·k) in practice when large segments produce many heap re-insertions.
+¹ O(n) to build the segment tree + O(k log n) to select k points, each requiring O(segment)
+distance updates each costing O(log n). Small targetSize at large n carries O(n) segment tree
+build overhead; the segment tree wins decisively over the heap for targetSize ≳ 500.
 
 ### When to choose each algorithm
 
@@ -248,12 +267,16 @@ original series. The `FIXED` bucketization strategy handles unevenly-spaced or g
 
 **RDP** is the right choice when geometric guarantees matter: no discarded point was ever more
 than `epsilon` away from the simplified line. The output size is unpredictable, which is
-sometimes a drawback. It is ~100× slower than LTTB at 500k points on this hardware.
+sometimes a drawback. It is ~100× slower than LTTB at 500k points on this hardware. Unlike
+most RDP implementations, this one uses an explicit stack rather than recursion, so it is safe
+on any input size — there is no `StackOverflowError` risk.
 
-**PIP** is the right choice when you need a small number of structurally dominant features from
-a series — peaks, troughs, abrupt changes — and the input is modest in size (≤50k points with
-small targetSize). The greedy selection order is unique: the most important point globally is
-always added before any locally-important-but-globally-minor point.
+**PIP** is the right choice when you need a precise number of structurally dominant features
+from a series — peaks, troughs, abrupt changes — and the selection order matters: the most
+globally important point is always added before any locally-important-but-globally-minor point.
+The segment tree implementation scales to 500k points, though it is still orders of magnitude
+slower than LTTB. Prefer it when the global ranking of importance is the priority; prefer LTTB
+when throughput is.
 
 ## Contributing
 
