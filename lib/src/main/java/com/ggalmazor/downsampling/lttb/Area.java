@@ -25,9 +25,9 @@ class Area {
    */
   static double ofTriangle(Point a, Point b, Point c) {
     // area of a triangle = |[Ax(By - Cy) + Bx(Cy - Ay) + Cx(Ay - By)] / 2|
-    double sum = a.getX() * (b.getY() - c.getY())
-        + b.getX() * (c.getY() - a.getY())
-        + c.getX() * (a.getY() - b.getY());
+    double sum = a.x() * (b.y() - c.y())
+        + b.x() * (c.y() - a.y())
+        + c.x() * (a.y() - b.y());
     return abs(sum / 2);
   }
 }

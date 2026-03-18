@@ -47,8 +47,8 @@ public final class PerceptuallyImportantPoints {
     double[] ys = new double[size];
     for (int i = 0; i < size; i++) {
       Point p = input.get(i);
-      xs[i] = p.getX();
-      ys[i] = p.getY();
+      xs[i] = p.x();
+      ys[i] = p.y();
     }
 
     // Doubly-linked list over *selected* indices only. prevSelected[i] / nextSelected[i]

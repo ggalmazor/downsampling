@@ -28,6 +28,38 @@ The library version number reflects the minimum Java version required to use it.
 is managed by [mise](https://mise.jdx.dev/). Run `mise install` to get the correct JDK for the
 branch you are on.
 
+## Migrating from 17.x to 21.x (and later)
+
+**21.x introduces one breaking change:** the `Point` interface accessors were renamed to match
+the record accessor convention, and `DoublePoint` was converted from a class to a record.
+
+| Before (17.x) | After (21.x+) |
+|---|---|
+| `point.getX()` | `point.x()` |
+| `point.getY()` | `point.y()` |
+
+If you use `DoublePoint` directly, only the accessor calls change — construction
+(`new DoublePoint(x, y)` or `DoublePoint.of(x, y)`) is unchanged.
+
+If you implement `Point` for your own domain type, rename the two methods accordingly:
+
+```java
+// 17.x
+public class Reading implements Point {
+    @Override public double getX() { return timestamp.toEpochMilli(); }
+    @Override public double getY() { return value; }
+}
+
+// 21.x+ — natural fit as a record
+public record Reading(Instant timestamp, double value) implements Point {
+    @Override public double x() { return timestamp.toEpochMilli(); }
+    @Override public double y() { return value; }
+}
+```
+
+No other API changes exist between 17.x and 21.x. The `Downsampling` facade, algorithm
+behaviour, and all parameter names are identical.
+
 ## Download
 
 Latest versions: 25.0.0 / 21.0.0 / 17.0.0
@@ -115,8 +147,8 @@ Implement `Point` to use your own data type. Records are the natural fit:
 
 ```java
 public record Reading(Instant timestamp, double value) implements Point {
-    @Override public double getX() { return timestamp.toEpochMilli(); }
-    @Override public double getY() { return value; }
+    @Override public double x() { return timestamp.toEpochMilli(); }
+    @Override public double y() { return value; }
 }
 
 // The output list is List<Reading> — the concrete type is preserved

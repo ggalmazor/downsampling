@@ -7,9 +7,9 @@ package com.ggalmazor.downsampling;
  * <p>Users of this library must use {@link DoublePoint} or implement their own subtypes of
  * this interface.
  *
- * <p><strong>Contract:</strong> {@code getX()} must be monotonically non-decreasing across a
+ * <p><strong>Contract:</strong> {@code x()} must be monotonically non-decreasing across a
  * sorted input list — i.e. for any two consecutive points {@code a} and {@code b} in the list
- * passed to a downsampler, {@code a.getX() <= b.getX()} must hold. Algorithms do not verify
+ * passed to a downsampler, {@code a.x() <= b.x()} must hold. Algorithms do not verify
  * this; violating it produces undefined output.
  */
 public interface Point {
@@ -23,7 +23,7 @@ public interface Point {
    * @return a {@link DoublePoint} in the geometric center between the two provided points
    */
   static DoublePoint centerBetween(Point a, Point b) {
-    return new DoublePoint((a.getX() + b.getX()) / 2.0, (a.getY() + b.getY()) / 2.0);
+    return new DoublePoint((a.x() + b.x()) / 2.0, (a.y() + b.y()) / 2.0);
   }
 
   /**
@@ -31,12 +31,14 @@ public interface Point {
    *
    * @return the x (horizontal / time) value of this point
    */
-  double getX();
+  @SuppressWarnings("checkstyle:MethodName") // single-letter axes are conventional
+  double x();
 
   /**
    * Returns the y (vertical / value) value of this point.
    *
    * @return the y (vertical / value) value of this point
    */
-  double getY();
+  @SuppressWarnings("checkstyle:MethodName") // single-letter axes are conventional
+  double y();
 }

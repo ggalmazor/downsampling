@@ -94,8 +94,8 @@ public class OnePassBucketizer {
           "Fixed-span bucketization requires at least 2 points");
     }
 
-    double x0 = input.get(0).getX();
-    double x1 = input.get(input.size() - 1).getX();
+    double x0 = input.get(0).x();
+    double x1 = input.get(input.size() - 1).x();
     double bucketWidth = (x1 - x0) / desiredBuckets;
 
     if (bucketWidth == 0) {
@@ -112,7 +112,7 @@ public class OnePassBucketizer {
 
     int lastBucketIndex = desiredBuckets - 1;
     for (int i = 1; i < input.size() - 1; i++) {
-      int bucketIndex = (int) ((input.get(i).getX() - x0) / bucketWidth);
+      int bucketIndex = (int) ((input.get(i).x() - x0) / bucketWidth);
       windowIndices[Math.min(bucketIndex, lastBucketIndex)].add(new int[]{i});
     }
 
