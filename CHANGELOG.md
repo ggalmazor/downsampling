@@ -2,6 +2,17 @@
 
 ## `v21`
 
+## Release 21.2.0
+
+- PIP: replaced lazy-deletion `PriorityQueue` with a flat array-backed max segment tree,
+  eliminating the O(n·k) stale-entry accumulation that caused 25× slowdown at large k
+- PIP now operates at true O(n + k log n): O(n) segment tree build + O(log n) per distance
+  update; the heap's lack of `decreaseKey` is no longer a bottleneck
+- PIP 100k/k=1000: 7.75 s → 959 ms (8× faster); 100k/k=5000: 8.15 s → 1.01 s (8× faster)
+- PIP 500k now completes in 4–11 s (previously hung indefinitely)
+- PIP 100k/k=100 regressed slightly (304 ms → 631 ms): O(n) tree build dominates at small k;
+  the segment tree wins decisively for targetSize ≳ 500
+
 ## Release 21.1.0
 
 - `DoublePoint` is now a `record` — correct `equals`/`hashCode`/`toString` out of the box,
