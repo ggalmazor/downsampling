@@ -1,3 +1,4 @@
+import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 
@@ -5,6 +6,7 @@ buildscript {
   repositories { mavenCentral() }
   dependencies {
     classpath("org.commonmark:commonmark:0.24.0")
+    classpath("org.commonmark:commonmark-ext-gfm-tables:0.24.0")
   }
 }
 
@@ -46,8 +48,9 @@ val generateJavadocOverview by tasks.registering {
 
   doLast {
     val markdown = readmeFile.readText()
-    val parser = Parser.builder().build()
-    val renderer = HtmlRenderer.builder().build()
+    val extensions = listOf(TablesExtension.create())
+    val parser = Parser.builder().extensions(extensions).build()
+    val renderer = HtmlRenderer.builder().extensions(extensions).build()
     val html = renderer.render(parser.parse(markdown))
     val output = overviewFile.get().asFile
     output.parentFile.mkdirs()
