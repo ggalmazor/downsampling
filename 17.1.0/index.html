@@ -49,6 +49,232 @@ loadScripts(document, 'script');</script>
 <div class="header">
 <h1 class="title">lib API</h1>
 </div>
+<div class="block"><h1>downsampling</h1>
+<p><a href="https://github.com/ggalmazor/downsampling/actions/workflows/ci.yml"><img src="https://github.com/ggalmazor/downsampling/actions/workflows/ci.yml/badge.svg" alt="CI"/></a></p>
+<p>A Java library providing three time-series downsampling algorithms under a shared data contract:
+<strong>LTTB</strong>, <strong>RDP</strong>, and <strong>PIP</strong>.</p>
+<p>These algorithms are designed to reduce the number of points in a series without losing its
+important visual features. See how they compare at
+<a href="https://ggalmazor.com/blog/evaluating_downsampling_algorithms">ggalmazor.com/blog/evaluating_downsampling_algorithms</a>.</p>
+<p>All three algorithms accept a <code>List&lt;T extends Point&gt;</code> and return a <code>List&lt;T&gt;</code>, preserving the
+caller's concrete point type throughout. The consistent API is in the data types, not a shared
+behavioural interface — each algorithm exposes different parameters that reflect what it actually
+controls.</p>
+<p>Javadoc at <a href="https://ggalmazor.com/downsampling">ggalmazor.com/downsampling</a></p>
+<h2>Java version support</h2>
+<p>| Version | Java baseline | Branch | Status |
+|---------|---------------|--------|--------|
+| 17.x.x | Java 17 | <code>v17</code> | Active (bug fixes only) |
+| 21.x.x | Java 21 | <code>v21</code> | Active |
+| 25.x.x | Java 25 | <code>main</code> | Active (cutting edge) |</p>
+<p>The library version number reflects the minimum Java version required to use it. The JDK version
+is managed by <a href="https://mise.jdx.dev/">mise</a>. Run <code>mise install</code> to get the correct JDK for the
+branch you are on.</p>
+<h2>Download</h2>
+<p>Latest versions: 25.0.0 / 21.0.0 / 17.0.0</p>
+<h3>Gradle</h3>
+<pre><code class="language-kotlin">implementation(&quot;com.ggalmazor:downsampling:25.0.0&quot;)
+</code></pre>
+<h3>Maven</h3>
+<pre><code class="language-xml">&lt;dependency&gt;
+  &lt;groupId&gt;com.ggalmazor&lt;/groupId&gt;
+  &lt;artifactId&gt;downsampling&lt;/artifactId&gt;
+  &lt;version&gt;25.0.0&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h2>Algorithms</h2>
+<h3>LTTB — Largest-Triangle Three-Buckets</h3>
+<p>Based on the paper <em>&quot;Downsampling Time Series for Visual Representation&quot;</em> by Sveinn Steinarsson,
+University of Iceland (2013).
+(<a href="http://skemman.is/stream/get/1946/15343/37285/3/SS_MSthesis.pdf">PDF</a>)</p>
+<p>Produces exactly <code>buckets + 2</code> output points. The input is divided into <code>buckets</code> equal-sized
+windows; from each window the point that forms the largest triangle with the previously selected
+point and the centroid of the next window is retained. Always preserves the first and last input
+points.</p>
+<p><strong>When to use:</strong> when you need a fixed, predictable output size and want the result to look
+visually faithful to the original series on a chart.</p>
+<pre><code class="language-java">// Downsample to 100 middle points (102 total including first and last)
+List&lt;MyPoint&gt; result = Downsampling.lttb(series, 100);
+
+// Unevenly-spaced data: use fixed x-span buckets instead of equal point-count buckets
+List&lt;MyPoint&gt; result = Downsampling.lttb(series, 100, BucketizationStrategy.FIXED);
+</code></pre>
+<p><code>BucketizationStrategy.DYNAMIC</code> (default) divides the input into buckets of equal point count.
+<code>BucketizationStrategy.FIXED</code> divides the x-axis range into equal-width intervals; empty
+intervals are silently skipped, so the output may contain fewer than <code>buckets + 2</code> points.</p>
+<h3>RDP — Ramer-Douglas-Peucker</h3>
+<p>Output size is determined by the data shape and <code>epsilon</code>: every retained interior point has a
+perpendicular distance greater than <code>epsilon</code> from the line connecting its two nearest retained
+neighbours. A larger <code>epsilon</code> retains fewer points; <code>epsilon = 0</code> retains all points.</p>
+<p>The implementation uses an explicit <code>Deque</code> stack rather than JVM call-stack recursion. The
+naive recursive formulation has O(log n) average / O(n) worst-case stack depth and causes
+<code>StackOverflowError</code> on adversarial or pathological inputs at large sizes. The iterative
+implementation eliminates this risk entirely — stack depth is O(1) regardless of input shape
+or size.</p>
+<p><strong>When to use:</strong> when you care about geometric fidelity (no point that would deviate more than
+<code>epsilon</code> from the simplified line is ever discarded) and are willing to accept a variable output
+size.</p>
+<pre><code class="language-java">// Simplify, discarding points within epsilon=0.5 of the connecting line
+List&lt;MyPoint&gt; result = Downsampling.rdp(series, 0.5);
+</code></pre>
+<h3>PIP — Perceptually Important Points</h3>
+<p>Produces exactly <code>targetSize</code> output points (or all points if <code>targetSize &gt;= input.size()</code>).
+Starting from the first and last points, the algorithm greedily adds the remaining point with
+the greatest perpendicular distance to the line connecting its two currently-selected neighbours,
+until the target count is reached.</p>
+<p><strong>When to use:</strong> when you need a precise output size and want the most globally prominent
+structural features preserved first — at the cost of significantly higher runtime than LTTB or
+RDP at large input sizes.</p>
+<pre><code class="language-java">// Select the 20 most perceptually important points
+List&lt;MyPoint&gt; result = Downsampling.pip(series, 20);
+</code></pre>
+<h2>Usage</h2>
+<h3>Custom point types</h3>
+<p>Implement <code>Point</code> to use your own data type:</p>
+<pre><code class="language-java">public class Reading implements Point {
+    private final Instant timestamp;
+    private final double value;
+
+    public Reading(Instant timestamp, double value) {
+        this.timestamp = timestamp;
+        this.value = value;
+    }
+
+    &#64;Override public double getX() { return timestamp.toEpochMilli(); }
+    &#64;Override public double getY() { return value; }
+
+    public Instant getTimestamp() { return timestamp; }
+}
+
+// The output list is List&lt;Reading&gt; — the concrete type is preserved
+List&lt;Reading&gt; downsampled = Downsampling.lttb(readings, 200);
+</code></pre>
+<p><code>getX()</code> must be monotonically non-decreasing across the input list. Algorithms do not verify
+this; violating it produces undefined output.</p>
+<h3>Built-in point type</h3>
+<p>For simple cases, use <code>DoublePoint</code>:</p>
+<pre><code class="language-java">List&lt;DoublePoint&gt; points = List.of(
+    DoublePoint.of(0, 1.2),
+    DoublePoint.of(1, 3.4),
+    DoublePoint.of(2, 2.1)
+);
+List&lt;DoublePoint&gt; result = Downsampling.rdp(points, 0.1);
+</code></pre>
+<h2>Building</h2>
+<pre><code class="language-shell">mise install                        # installs the correct JDK for this branch via mise
+./gradlew build                     # compile, test, checkstyle
+./gradlew test                      # run tests only
+./gradlew checkstyleMain            # run Checkstyle on main sources only
+./gradlew jmh                       # run JMH benchmarks (takes several minutes)
+./gradlew javadoc                   # generate Javadoc
+</code></pre>
+<h2>Benchmarks</h2>
+<p>Measured with <a href="https://github.com/openjdk/jmh">JMH</a> on OpenJDK 25.0.2, Apple M-series,
+2 JVM forks × 5 measurement iterations × 1 s each, average time mode. Synthetic input: linear
+trend + sine wave + random noise, all <code>DoublePoint</code>. RDP output size is data-driven and varies
+with epsilon.</p>
+<p>Run benchmarks locally with:</p>
+<pre><code class="language-bash">mise exec -- ./gradlew jmh
+</code></pre>
+<h3>LTTB</h3>
+<p>| dataSize | targetPoints | ms/op |
+|:---:|:---:|---:|
+| 10k | 100 | 0.023 |
+| 10k | 1 000 | 0.060 |
+| 10k | 5 000 | 0.136 |
+| 100k | 100 | 0.226 |
+| 100k | 1 000 | 0.249 |
+| 100k | 5 000 | 0.321 |
+| 500k | 100 | 1.574 |
+| 500k | 1 000 | 1.359 |
+| 500k | 5 000 | 1.549 |</p>
+<p>Linear scaling confirmed: 10× data → ~10× time. <code>targetPoints</code> has a modest secondary effect
+within a data-size tier (more buckets = more array extraction overhead) but it disappears at
+500k, where the O(n) coordinate-extraction pass dominates. <strong>500k points in ~1.5 ms.</strong></p>
+<h3>RDP</h3>
+<p>| dataSize | epsilon | ms/op |
+|:---:|:---:|---:|
+| 10k | 0.5 | 0.734 |
+| 10k | 2.0 | 0.573 |
+| 10k | 5.0 | 0.210 |
+| 100k | 0.5 | 16.778 |
+| 100k | 2.0 | 15.162 |
+| 100k | 5.0 | 11.561 |
+| 500k | 0.5 | 145.516 |
+| 500k | 2.0 | 133.401 |
+| 500k | 5.0 | 118.610 |</p>
+<p>10k → 100k: ~22× slower. 100k → 500k: ~9× slower — consistent with O(n log n). The epsilon
+effect is visible: smaller epsilon → more retained points → deeper recursion trees → more work.
+At 500k the spread is 145 ms (epsilon=0.5) vs 119 ms (epsilon=5.0), a 22% difference from tree
+shape alone. <strong>500k points in 120–146 ms.</strong></p>
+<h3>PIP</h3>
+<p>| dataSize | targetSize | ms/op |
+|:---:|:---:|---:|
+| 10k | 100 | 13.3 |
+| 10k | 1 000 | 19.0 |
+| 10k | 5 000 | 21.7 |
+| 100k | 100 | 631 |
+| 100k | 1 000 | 959 |
+| 100k | 5 000 | 1 010 |
+| 500k | 100 | 4 098 |
+| 500k | 1 000 | 10 876 |
+| 500k | 5 000 | 11 005 |</p>
+<p>The previous heap-based implementation had a 25× blowup when going from targetSize=100 to
+targetSize=1 000 at 100k points (304 ms → 7.75 s), caused by O(n·k) stale entry accumulation
+in the lazy-deletion priority queue. The segment tree implementation resolves this: the same
+step is now 631 ms → 959 ms, a 1.5× increase for a 10× increase in k.</p>
+<p>At 100k, targetSize=100 regressed from 304 ms to 631 ms. This is a deliberate trade-off worth
+understanding: the segment tree always costs O(n) to build, touching every leaf once regardless
+of k. The old lazy-deletion heap avoided this — it started with all n entries in the heap but
+only ever polled and re-inserted entries reachable from the O(k) segments it actually visited.
+When k ≪ n the heap never paid the O(n) overhead; the segment tree cannot avoid it. The
+crossover is around k/n ≈ 0.005–0.01 on this hardware: below that the heap was cheaper; above
+it the heap's O(n·k) stale-entry accumulation made it catastrophically slower. If your workload
+is consistently small k relative to n (e.g. selecting 50–100 points from a 100k+ series), this
+regression is real — it is a known trade-off of using an eager data structure where a lazy one
+was sufficient. At k=1 000 and above the segment tree wins decisively.</p>
+<p>At 500k, all combinations now complete in finite time. The k=100 → k=1 000 jump is 4.1 s →
+10.9 s — a 2.7× increase for a 10× increase in k, confirming the improved complexity.
+<strong>500k points in 4–11 s</strong> depending on targetSize.</p>
+<h2>Algorithm comparison</h2>
+<p>| | LTTB | RDP | PIP |
+|---|:---:|:---:|:---:|
+| Output size | exact (<code>buckets + 2</code>) | data-driven | exact (<code>targetSize</code>) |
+| Control parameter | bucket count | epsilon (distance) | target point count |
+| Time complexity | O(n) | O(n log n) avg / O(n²) worst | O(n + k log n)¹ |
+| Stack depth | O(1) | O(1) — iterative, no <code>StackOverflowError</code> risk | O(1) |
+| Visual fidelity | high — optimised for charts | geometric — no point with dist &gt; ε discarded | high — most prominent features first |
+| Unevenly-spaced data | FIXED strategy | natural | natural |
+| Practical limit | 500k+ points, &lt;2 ms | 500k in 120–146 ms | 500k in 4–11 s |</p>
+<p>¹ O(n) to build the segment tree + O(k log n) for k selections, each updating O(segment length)
+neighbours at O(log n) per update. The O(n) build is eager and unavoidable regardless of k; the
+previous lazy-deletion heap avoided this cost when k ≪ n by only ever touching O(k) entries. The
+segment tree wins when k/n ≳ 0.01; the heap was faster when k/n ≲ 0.001.</p>
+<h3>When to choose each algorithm</h3>
+<p><strong>LTTB</strong> is the right default for chart rendering. It is an order of magnitude faster than RDP
+and PIP at every data size, scales linearly, and produces output that looks faithful to the
+original series. The <code>FIXED</code> bucketization strategy handles unevenly-spaced or gappy data.</p>
+<p><strong>RDP</strong> is the right choice when geometric guarantees matter: no discarded point was ever more
+than <code>epsilon</code> away from the simplified line. The output size is unpredictable, which is
+sometimes a drawback. It is ~100× slower than LTTB at 500k points on this hardware. Unlike
+most RDP implementations, this one uses an explicit stack rather than recursion, so it is safe
+on any input size — there is no <code>StackOverflowError</code> risk.</p>
+<p><strong>PIP</strong> is the right choice when you need a precise number of structurally dominant features
+from a series — peaks, troughs, abrupt changes — and the selection order matters: the most
+globally important point is always added before any locally-important-but-globally-minor point.
+The segment tree implementation scales to 500k points, though it is still orders of magnitude
+slower than LTTB. Prefer it when the global ranking of importance is the priority; prefer LTTB
+when throughput is.</p>
+<h2>Contributing</h2>
+<p>This project enforces <a href="https://google.github.io/styleguide/javaguide.html">Google Java Style</a>
+via Checkstyle. The configuration lives in <code>config/checkstyle/</code>. Run it with:</p>
+<pre><code class="language-bash">./gradlew checkstyleMain
+</code></pre>
+<p>Checkstyle runs automatically as part of <code>./gradlew build</code>. The <code>test</code> and <code>jmh</code> source sets are
+excluded from Checkstyle. The only active suppression is an inline <code>@SuppressWarnings</code> on
+<code>LargestTriangleThreeBuckets</code> to allow the <code>LT</code> domain abbreviation.</p>
+<p>The JDK version is managed by <a href="https://mise.jdx.dev/">mise</a>. Run <code>mise install</code> to get the
+correct JDK for this branch.</p></div>
 <div id="all-packages-table">
 <div class="caption"><span>Packages</span></div>
 <div class="summary-table two-column-summary">
