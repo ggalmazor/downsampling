@@ -13,7 +13,7 @@ import java.util.List;
  * <p>{@link #startIndex} and {@link #endIndex} (exclusive) are the positions of this bucket's
  * points in the original input list. They are used by the {@link DoublePoint} fast path in
  * {@code LargestTriangleThreeBuckets} to index into pre-extracted coordinate arrays directly,
- * avoiding per-point virtual dispatch through {@link Point#getX()} and {@link Point#getY()}.
+ * avoiding per-point virtual dispatch through {@link Point#x()} and {@link Point#y()}.
  *
  * @param <T> the type of the {@link Point} points in this bucket
  */

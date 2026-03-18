@@ -44,8 +44,8 @@ public final class RamerDouglasPeucker {
     double[] ys = new double[size];
     for (int i = 0; i < size; i++) {
       Point p = input.get(i);
-      xs[i] = p.getX();
-      ys[i] = p.getY();
+      xs[i] = p.x();
+      ys[i] = p.y();
     }
 
     // Square epsilon once; the inner loop compares squared distances to avoid sqrt entirely.
@@ -142,12 +142,12 @@ public final class RamerDouglasPeucker {
    * <p>Used by {@link PerceptuallyImportantPoints} and exposed for testing.
    */
   static double perpendicularDistance(Point point, Point lineStart, Point lineEnd) {
-    double x0 = point.getX();
-    double y0 = point.getY();
-    double x1 = lineStart.getX();
-    double y1 = lineStart.getY();
-    double x2 = lineEnd.getX();
-    double y2 = lineEnd.getY();
+    double x0 = point.x();
+    double y0 = point.y();
+    double x1 = lineStart.x();
+    double y1 = lineStart.y();
+    double x2 = lineEnd.x();
+    double y2 = lineEnd.y();
 
     double dx = x2 - x1;
     double dy = y2 - y1;

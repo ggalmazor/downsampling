@@ -86,7 +86,7 @@ public class RamerDouglasPeuckerTest {
 
     List<DoublePoint> output = RamerDouglasPeucker.simplify(input, 1.0);
 
-    assertThat(output.stream().anyMatch(p -> p.getX() == 5.0 && p.getY() == 10.0), equalTo(true));
+    assertThat(output.stream().anyMatch(p -> p.x() == 5.0 && p.y() == 10.0), equalTo(true));
   }
 
   @Test
@@ -150,13 +150,13 @@ public class RamerDouglasPeuckerTest {
           double value = Double.parseDouble(cols[1]);
           return new DateSeriesPoint(date, value);
         })
-        .sorted(comparing(Point::getX))
+        .sorted(comparing(Point::x))
         .collect(toList());
 
     // epsilon=0.5 retains the structurally most important turning points in the FX series
     List<DateSeriesPoint> output = RamerDouglasPeucker.simplify(series, 0.5);
     List<LocalDate> selectedDates = output.stream()
-        .map(DateSeriesPoint::getDate)
+        .map(DateSeriesPoint::date)
         .collect(toList());
     assertThat(selectedDates, contains(
         LocalDate.of(1979, 12, 31),

@@ -122,8 +122,8 @@ public final class LargestTriangleThreeBuckets {
     double[] ys = new double[size];
     for (int i = 0; i < size; i++) {
       DoublePoint p = input.get(i);
-      xs[i] = p.getX();
-      ys[i] = p.getY();
+      xs[i] = p.x();
+      ys[i] = p.y();
     }
 
     @SuppressWarnings("unchecked")
@@ -149,7 +149,7 @@ public final class LargestTriangleThreeBuckets {
    *
    * <p>Uses the bucket's {@link Bucket#getStartIndex()}/{@link Bucket#getEndIndex()} to index
    * directly into the pre-extracted {@code xs[]} and {@code ys[]} arrays, avoiding two virtual
-   * method calls ({@link DoublePoint#getX()}/{@link DoublePoint#getY()}) per candidate.
+   * method calls ({@link DoublePoint#x()}/{@link DoublePoint#y()}) per candidate.
    */
   private static DoublePoint selectBestDoublePoint(
       List<Bucket<DoublePoint>> buckets,

@@ -119,7 +119,7 @@ public class PerceptuallyImportantPointsTest {
     List<DoublePoint> output = PerceptuallyImportantPoints.select(input, 3);
 
     // The spike at x=2 must be in the output
-    assertThat(output.stream().anyMatch(p -> p.getX() == 2.0 && p.getY() == 10.0), equalTo(true));
+    assertThat(output.stream().anyMatch(p -> p.x() == 2.0 && p.y() == 10.0), equalTo(true));
   }
 
   @Test
@@ -140,7 +140,7 @@ public class PerceptuallyImportantPointsTest {
     assertThat(output.get(0), pointAt(0, 0));
     assertThat(output.get(output.size() - 1), pointAt(6, 6));
     // The spike (3,5) has the largest perpendicular distance from any connecting line
-    assertThat(output.stream().anyMatch(p -> p.getX() == 3.0), equalTo(true));
+    assertThat(output.stream().anyMatch(p -> p.x() == 3.0), equalTo(true));
   }
 
   @Test
@@ -157,7 +157,7 @@ public class PerceptuallyImportantPointsTest {
     List<DoublePoint> output = PerceptuallyImportantPoints.select(input, 4);
 
     for (int i = 1; i < output.size(); i++) {
-      assertThat(output.get(i).getX() >= output.get(i - 1).getX(), equalTo(true));
+      assertThat(output.get(i).x() >= output.get(i - 1).x(), equalTo(true));
     }
   }
 
@@ -173,12 +173,12 @@ public class PerceptuallyImportantPointsTest {
           double value = Double.parseDouble(cols[1]);
           return new DateSeriesPoint(date, value);
         })
-        .sorted(comparing(Point::getX))
+        .sorted(comparing(Point::x))
         .collect(toList());
 
     List<DateSeriesPoint> output = PerceptuallyImportantPoints.select(series, 12);
     List<LocalDate> selectedDates = output.stream()
-        .map(DateSeriesPoint::getDate)
+        .map(DateSeriesPoint::date)
         .collect(toList());
     assertThat(selectedDates, contains(
         LocalDate.of(1979, 12, 31),

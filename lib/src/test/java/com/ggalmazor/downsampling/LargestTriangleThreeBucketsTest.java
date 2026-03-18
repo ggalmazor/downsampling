@@ -225,12 +225,12 @@ public class LargestTriangleThreeBucketsTest {
           double value = Double.parseDouble(cols[1]);
           return new DateSeriesPoint(date, value);
         })
-        .sorted(comparing(Point::getX))
+        .sorted(comparing(Point::x))
         .collect(toList());
 
     List<DateSeriesPoint> output = LargestTriangleThreeBuckets.sorted(series, 10);
     List<LocalDate> selectedDates = output.stream()
-        .map(DateSeriesPoint::getDate)
+        .map(DateSeriesPoint::date)
         .collect(toList());
     assertThat(selectedDates, contains(
         LocalDate.of(1979, 12, 31),
