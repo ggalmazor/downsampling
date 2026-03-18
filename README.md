@@ -1,18 +1,60 @@
 # downsampling
 
+[![CI](https://github.com/ggalmazor/downsampling/actions/workflows/ci.yml/badge.svg)](https://github.com/ggalmazor/downsampling/actions/workflows/ci.yml)
+
 A Java library providing three time-series downsampling algorithms under a shared data contract:
 **LTTB**, **RDP**, and **PIP**.
+
+These algorithms are designed to reduce the number of points in a series without losing its
+important visual features. See how they compare at
+[ggalmazor.com/blog/evaluating_downsampling_algorithms](https://ggalmazor.com/blog/evaluating_downsampling_algorithms).
 
 All three algorithms accept a `List<T extends Point>` and return a `List<T>`, preserving the
 caller's concrete point type throughout. The consistent API is in the data types, not a shared
 behavioural interface — each algorithm exposes different parameters that reflect what it actually
 controls.
 
-Requires Java 25 (managed via [mise](https://mise.jdx.dev/)).
+Javadoc at [ggalmazor.com/downsampling](https://ggalmazor.com/downsampling)
+
+## Java version support
+
+| Version | Java baseline | Branch | Status |
+|---------|---------------|--------|--------|
+| 17.x.x | Java 17 | `v17` | Active (bug fixes only) |
+| 21.x.x | Java 21 | `v21` | Active |
+| 25.x.x | Java 25 | `main` | Active (cutting edge) |
+
+The library version number reflects the minimum Java version required to use it. The JDK version
+is managed by [mise](https://mise.jdx.dev/). Run `mise install` to get the correct JDK for the
+branch you are on.
+
+## Download
+
+Latest versions: 25.0.0 / 21.0.0 / 17.0.0
+
+### Gradle
+
+```kotlin
+implementation("com.ggalmazor:downsampling:25.0.0")
+```
+
+### Maven
+
+```xml
+<dependency>
+  <groupId>com.ggalmazor</groupId>
+  <artifactId>downsampling</artifactId>
+  <version>25.0.0</version>
+</dependency>
+```
 
 ## Algorithms
 
 ### LTTB — Largest-Triangle Three-Buckets
+
+Based on the paper *"Downsampling Time Series for Visual Representation"* by Sveinn Steinarsson,
+University of Iceland (2013).
+([PDF](http://skemman.is/stream/get/1946/15343/37285/3/SS_MSthesis.pdf))
 
 Produces exactly `buckets + 2` output points. The input is divided into `buckets` equal-sized
 windows; from each window the point that forms the largest triangle with the previously selected
@@ -110,16 +152,26 @@ List<DoublePoint> result = Downsampling.rdp(points, 0.1);
 ## Building
 
 ```shell
-mise install          # installs openjdk-25.0.2 via mise
-./gradlew build       # compile, test, checkstyle
-./gradlew jmh         # run JMH benchmarks (takes several minutes)
+mise install                        # installs the correct JDK for this branch via mise
+./gradlew build                     # compile, test, checkstyle
+./gradlew test                      # run tests only
+./gradlew checkstyleMain            # run Checkstyle on main sources only
+./gradlew jmh                       # run JMH benchmarks (takes several minutes)
+./gradlew javadoc                   # generate Javadoc
 ```
 
 ## Benchmarks
 
-Measured on OpenJDK 25.0.2, Apple M-series, 2 JVM forks × 5 measurement iterations × 1 s each,
-average time mode. Synthetic input: linear trend + sine wave + random noise, all `DoublePoint`.
-RDP output size is data-driven and varies with epsilon.
+Measured with [JMH](https://github.com/openjdk/jmh) on OpenJDK 25.0.2, Apple M-series,
+2 JVM forks × 5 measurement iterations × 1 s each, average time mode. Synthetic input: linear
+trend + sine wave + random noise, all `DoublePoint`. RDP output size is data-driven and varies
+with epsilon.
+
+Run benchmarks locally with:
+
+```bash
+mise exec -- ./gradlew jmh
+```
 
 ### LTTB
 
@@ -203,19 +255,18 @@ a series — peaks, troughs, abrupt changes — and the input is modest in size 
 small targetSize). The greedy selection order is unique: the most important point globally is
 always added before any locally-important-but-globally-minor point.
 
-## Package layout
+## Contributing
 
+This project enforces [Google Java Style](https://google.github.io/styleguide/javaguide.html)
+via Checkstyle. The configuration lives in `config/checkstyle/`. Run it with:
+
+```bash
+./gradlew checkstyleMain
 ```
-com.ggalmazor.downsampling
-├── Downsampling          public facade — start here
-├── Point                 interface for input/output data
-├── DoublePoint           built-in Point backed by double
-├── LargestTriangleThreeBuckets
-├── RamerDouglasPeucker
-├── PerceptuallyImportantPoints
-└── lttb/
-    ├── BucketizationStrategy   DYNAMIC | FIXED
-    ├── Bucket                  LTTB internal
-    ├── Triangle                LTTB internal
-    └── OnePassBucketizer       LTTB internal
-```
+
+Checkstyle runs automatically as part of `./gradlew build`. The `test` and `jmh` source sets are
+excluded from Checkstyle. The only active suppression is an inline `@SuppressWarnings` on
+`LargestTriangleThreeBuckets` to allow the `LT` domain abbreviation.
+
+The JDK version is managed by [mise](https://mise.jdx.dev/). Run `mise install` to get the
+correct JDK for this branch.
