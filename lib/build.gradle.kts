@@ -5,7 +5,7 @@ import org.commonmark.renderer.html.HtmlRenderer
 buildscript {
   repositories { mavenCentral() }
   dependencies {
-    classpath("org.commonmark:commonmark:0.32.0")
+    classpath("org.commonmark:commonmark:0.33.0")
     classpath("org.commonmark:commonmark-ext-gfm-tables:0.32.0")
   }
 }
